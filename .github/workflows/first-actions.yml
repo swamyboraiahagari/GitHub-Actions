@@ -1,28 +1,65 @@
-name: My First GitHub Actions
+name: Python CI/Tests
 
-on: [push]
+on: 
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Use newer, more current Python versions for modern projects
+    # You can update this to 3.10, 3.11, 3.12, etc., as needed.
+    runs-on: ubuntu-latest 
 
     strategy:
+      # Updated Python versions for modern support
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: ["3.9", "3.10", "3.11"] 
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Checkout Repository
+      # Recommended to use the latest major version (v4 or v5/v6 available)
+      uses: actions/checkout@v4 
+
+    - name: Set up Python ${{ matrix.python-version }}
+      # Recommended to use the latest major version (v4 or v6 available)
+      uses: actions/setup-python@v5 
       with:
         python-version: ${{ matrix.python-version }}
 
+    # 💡 Optimization: Cache Python dependencies (saves time on subsequent runs)
+    # The cache key is generated from the runner OS and the hash of your requirements.txt
+    # This step should come BEFORE installing dependencies.
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip # Path to store cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Install dependencies
       run: |
+        # Always good practice to upgrade pip
         python -m pip install --upgrade pip
-        pip install pytest
+        # Install dependencies from a dedicated file (best practice)
+        # Assuming you moved 'pytest' to a requirements.txt file.
+        # If you don't use a requirements.txt, keep 'pip install pytest'
+        pip install -r requirements.txt 
 
-    - name: Run tests
+    - name: Run Tests with Pytest
+      # Best practice: use one single run block for complex commands
       run: |
+        # Change directory to src
         cd src
+        # Run pytest. Consider adding '--cov' flags for code coverage.
         python -m pytest addition.py
+        
+    # Optional: If you want to see test results attached to the workflow run
+    # - name: Upload Test Results Artifact
+    #   uses: actions/upload-artifact@v3
+    #   if: always() # Run this step even if tests fail
+    #   with:
+    #     name: pytest-results-${{ matrix.python-version }}
+    #     path: ./src/test-results.xml
