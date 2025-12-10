@@ -8,58 +8,47 @@ on:
 
 jobs:
   build:
-    # Use newer, more current Python versions for modern projects
-    # You can update this to 3.10, 3.11, 3.12, etc., as needed.
     runs-on: ubuntu-latest 
 
     strategy:
-      # Updated Python versions for modern support
       matrix:
         python-version: ["3.9", "3.10", "3.11"] 
 
     steps:
     - name: Checkout Repository
-      # Recommended to use the latest major version (v4 or v5/v6 available)
       uses: actions/checkout@v4 
 
     - name: Set up Python ${{ matrix.python-version }}
-      # Recommended to use the latest major version (v4 or v6 available)
       uses: actions/setup-python@v5 
       with:
         python-version: ${{ matrix.python-version }}
 
-    # 💡 Optimization: Cache Python dependencies (saves time on subsequent runs)
-    # The cache key is generated from the runner OS and the hash of your requirements.txt
-    # This step should come BEFORE installing dependencies.
+    # Cache step remains the same, as requirements.txt is in the root
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
-        path: ~/.cache/pip # Path to store cache
+        path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - name: Install dependencies
+      # This will now successfully read the requirements.txt file from the root
       run: |
-        # Always good practice to upgrade pip
         python -m pip install --upgrade pip
-        # Install dependencies from a dedicated file (best practice)
-        # Assuming you moved 'pytest' to a requirements.txt file.
-        # If you don't use a requirements.txt, keep 'pip install pytest'
         pip install -r requirements.txt 
 
+    # 🚨 CRITICAL PATH ADJUSTMENT 🚨
+    # If app.py and your tests are in the 'src' folder, you need to tell pytest where to find them.
     - name: Run Tests with Pytest
-      # Best practice: use one single run block for complex commands
       run: |
-        # Change directory to src
-        cd src
-        # Run pytest. Consider adding '--cov' flags for code coverage.
-        python -m pytest addition.py
+        # 1. Install your code as a package (best practice for testing)
+        # pip install ./src 
         
-    # Optional: If you want to see test results attached to the workflow run
-    # - name: Upload Test Results Artifact
-    #   uses: actions/upload-artifact@v3
-    #   if: always() # Run this step even if tests fail
-    #   with:
-    #     name: pytest-results-${{ matrix.python-version }}
-    #     path: ./src/test-results.xml
+        # 2. Run pytest, targeting the specific file path or a directory
+        # The path 'src/app.py' assumes your app.py is inside the src folder.
+        python -m pytest src/app.py
+        
+        # If you have tests in the 'example' folder that also failed, you might
+        # need to run pytest on both folders:
+        # python -m pytest src/ example/
