@@ -1,0 +1,10 @@
+# This file lists all packages required for your Python application and tests.
+
+# The testing framework needed to run your tests
+pytest
+
+# If your app (or other code in example/ or src/) used Flask, you'd add:
+# Flask==2.3.3 
+
+# If your app used requests for API calls, you'd add:
+# requests>=2.31.0
