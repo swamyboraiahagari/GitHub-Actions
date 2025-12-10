@@ -46,8 +46,8 @@ jobs:
         # pip install ./src 
         
         # 2. Run pytest, targeting the specific file path or a directory
-        # The path 'src/app.py' assumes your app.py is inside the src folder.
-        python -m pytest src/app.py
+        # The path 'src/addition.py' assumes your app.py is inside the src folder.
+        python -m pytest src/addition.py
         
         # If you have tests in the 'example' folder that also failed, you might
         # need to run pytest on both folders:
